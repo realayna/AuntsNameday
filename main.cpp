@@ -5,51 +5,76 @@
 
 using namespace std;
 
-class NamesdayParty {
-public:
-    unordered_map<string, int> setSittingScheme(const unordered_map<string, vector<string>>& graph) {
-        unordered_map<string, int> seatingArrangement;
-        unordered_set<string> visited;
+unordered_map<string, unordered_set<string>> dislikes;
 
-        int table = 1;
-        for (const auto& entry : graph) {
-            const string& guest = entry.first;
-            if (visited.find(guest) == visited.end()) {
-                dfs(graph, guest, seatingArrangement, visited, table);
-                table++;
-            }
-        }
+bool isSafeToSit(const string& person, const vector<string>& table) {
+    for (const string& guest : table) {
+        if (dislikes[person].count(guest))
+            return false;
+    }
+    return true;
+}
 
-        return seatingArrangement;
+bool arrangeTables(vector<string>& guests, vector<vector<string>>& tables) {
+    if (guests.empty()) {
+        return true;  // All guests have been seated
     }
 
-private:
-    void dfs(const unordered_map<string, vector<string>>& graph, const string& guest, unordered_map<string, int>& seatingArrangement, unordered_set<string>& visited, int table) {
-        visited.insert(guest);
-        seatingArrangement[guest] = table;
+    const string person = guests.back();
+    guests.pop_back();
 
-        for (const auto& neighbor : graph.at(guest)) {
-            if (visited.find(neighbor) == visited.end()) {
-                dfs(graph, neighbor, seatingArrangement, visited, table);
+    for (auto& table : tables) {
+        if (isSafeToSit(person, table)) {
+            table.push_back(person);
+
+            if (arrangeTables(guests, tables)) {
+                return true;  // Guests have been successfully seated
             }
+
+            table.pop_back();  // Backtrack if arrangement failed
         }
     }
-};
+
+    guests.push_back(person);  // Put the person back in the guests list
+    return false;  // Unable to arrange guests at the tables
+}
+
+void printSittingArrangement(const vector<vector<string>>& tables) {
+    cout << "Sitting Arrangement:\n";
+    for (size_t i = 0; i < tables.size(); i++) {
+        cout << "Table " << (i + 1) << ": ";
+        for (const string& guest : tables[i]) {
+            cout << guest << " ";
+        }
+        cout << endl;
+    }
+}
 
 int main() {
-    unordered_map<string, vector<string>> graph;
+    // List of invited guests
+    vector<string> guests = {"Alice", "Bob", "Charlie", "David", "Eve", "Frank"};
 
-    // Add the invited guests and their animosities to the graph
-    graph["Aunt Petunia"] = { "John", "Mary" };
-    graph["John"] = { "Aunt Petunia", "Mary" };
-    graph["Mary"] = { "Aunt Petunia", "John" };
+    // Aunt's suggestions on who doesn't like whom
+    dislikes["Alice"] = {"Charlie"};
+    dislikes["Bob"] = {"Eve"};
+    dislikes["Charlie"] = {"Alice", "David"};
+    dislikes["David"] = {"Charlie", "Frank"};
+    dislikes["Eve"] = {"Bob"};
+    dislikes["Frank"] = {"David"};
 
-    NamesdayParty party;
-    unordered_map<string, int> seatingArrangement = party.setSittingScheme(graph);
+    // Number of tables
+    int numTables = 2;
 
-    // Print the seating arrangement
-    for (const auto& entry : seatingArrangement) {
-        cout << entry.first << " - Table " << entry.second << endl;
+    // Initialize tables
+    vector<vector<string>> tables(numTables);
+
+    // Arrange the sitting scheme
+    bool success = arrangeTables(guests, tables);
+
+    if (success) {
+        printSittingArrangement(tables);
+    } else {
+        cout << "Unable to arrange sitting." << endl;
     }
 
     return 0;
