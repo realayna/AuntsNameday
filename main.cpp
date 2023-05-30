@@ -15,7 +15,7 @@ bool isSafeToSit(const string& person, const vector<string>& table) {
     return true;
 }
 
-bool arrangeTables(vector<string>& guests, vector<vector<string>>& tables) {
+bool dfs(vector<string>& guests, vector<vector<string>>& tables) {
     if (guests.empty()) {
         return true;  // All guests have been seated
     }
@@ -27,7 +27,7 @@ bool arrangeTables(vector<string>& guests, vector<vector<string>>& tables) {
         if (isSafeToSit(person, table)) {
             table.push_back(person);
 
-            if (arrangeTables(guests, tables)) {
+            if (dfs(guests, tables)) {
                 return true;  // Guests have been successfully seated
             }
 
@@ -37,6 +37,10 @@ bool arrangeTables(vector<string>& guests, vector<vector<string>>& tables) {
 
     guests.push_back(person);  // Put the person back in the guests list
     return false;  // Unable to arrange guests at the tables
+}
+
+bool arrangeTables(vector<string>& guests, vector<vector<string>>& tables) {
+    return dfs(guests, tables);
 }
 
 void printSittingArrangement(const vector<vector<string>>& tables) {
